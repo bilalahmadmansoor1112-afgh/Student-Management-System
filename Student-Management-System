@@ -1,0 +1,497 @@
+
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+
+class Student {
+
+    private int id;
+    private String name;
+    private String fatherName;
+    private String department;
+    private int semester;
+    private String phone;
+    private double gpa;
+
+    public Student(int id, String name, String fatherName,
+                   String department, int semester,
+                   String phone, double gpa) {
+
+        this.id = id;
+        this.name = name;
+        this.fatherName = fatherName;
+        this.department = department;
+        this.semester = semester;
+        this.phone = phone;
+        this.gpa = gpa;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getFatherName() {
+        return fatherName;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public int getSemester() {
+        return semester;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public double getGpa() {
+        return gpa;
+    }
+
+    public void updateDetails(String name, String fatherName,
+                              String department, int semester,
+                              String phone, double gpa) {
+
+        this.name = name;
+        this.fatherName = fatherName;
+        this.department = department;
+        this.semester = semester;
+        this.phone = phone;
+        this.gpa = gpa;
+    }
+
+    public void display() {
+        System.out.println("-----------------------------------");
+        System.out.println("Student ID: " + id);
+        System.out.println("Name: " + name);
+        System.out.println("Father Name: " + fatherName);
+        System.out.println("Department: " + department);
+        System.out.println("Semester: " + semester);
+        System.out.println("Phone: " + phone);
+        System.out.println("GPA: " + gpa);
+        System.out.println("-----------------------------------");
+    }
+}
+
+public class StudentManagementSystem {
+
+    private static ArrayList<Student> students =
+            new ArrayList<>();
+
+    private static Scanner input = new Scanner(System.in);
+
+    private static final String FILE_NAME = "students.dat";
+
+    private static int nextId = 1;
+
+    // Main Method
+    public static void main(String[] args) {
+
+        loadStudents();
+
+        int choice;
+
+        do {
+            showMenu();
+
+            choice = readInt("Enter your choice: ");
+
+            switch (choice) {
+
+                case 1:
+                    addStudent();
+                    break;
+
+                case 2:
+                    viewStudents();
+                    break;
+
+                case 3:
+                    searchStudent();
+                    break;
+
+                case 4:
+                    updateStudent();
+                    break;
+
+                case 5:
+                    deleteStudent();
+                    break;
+
+                case 6:
+                    showStatistics();
+                    break;
+
+                case 7:
+                    saveStudents();
+                    System.out.println("Thank you for using the system!");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice! Try again.");
+            }
+
+        } while (choice != 7);
+
+        input.close();
+    }
+
+    // Main Menu
+    public static void showMenu() {
+
+        System.out.println("\n==================================");
+        System.out.println("     STUDENT MANAGEMENT SYSTEM");
+        System.out.println("==================================");
+        System.out.println("1. Add Student");
+        System.out.println("2. View All Students");
+        System.out.println("3. Search Student");
+        System.out.println("4. Update Student");
+        System.out.println("5. Delete Student");
+        System.out.println("6. Student Statistics");
+        System.out.println("7. Save and Exit");
+        System.out.println("==================================");
+    }
+
+    // Add Student
+    public static void addStudent() {
+
+        System.out.println("\n--- Add New Student ---");
+
+        String name = readText("Enter student name: ");
+        String father = readText("Enter father name: ");
+        String department = readText("Enter department: ");
+
+        int semester = readInt("Enter semester (1-12): ");
+
+        while (semester < 1 || semester > 12) {
+            System.out.println("Semester must be between 1 and 12.");
+            semester = readInt("Enter semester: ");
+        }
+
+        String phone = readText("Enter phone number: ");
+
+        double gpa = readDouble("Enter GPA (0-4): ");
+
+        while (gpa < 0 || gpa > 4) {
+            System.out.println("GPA must be between 0 and 4.");
+            gpa = readDouble("Enter GPA: ");
+        }
+
+        Student student = new Student(
+                nextId, name, father, department,
+                semester, phone, gpa
+        );
+
+        students.add(student);
+
+        System.out.println("Student added successfully!");
+        System.out.println("Assigned Student ID: " + nextId);
+
+        nextId++;
+
+        saveStudents();
+    }
+
+    // View All Students
+    public static void viewStudents() {
+
+        System.out.println("\n--- All Students ---");
+
+        if (students.isEmpty()) {
+            System.out.println("No students found!");
+            return;
+        }
+
+        for (Student student : students) {
+            student.display();
+        }
+
+        System.out.println("Total Students: " + students.size());
+    }
+
+    // Search Student
+    public static void searchStudent() {
+
+        System.out.println("\n--- Search Student ---");
+
+        int id = readInt("Enter Student ID: ");
+
+        Student student = findStudent(id);
+
+        if (student != null) {
+            System.out.println("Student Found!");
+            student.display();
+        } else {
+            System.out.println("Student not found!");
+        }
+    }
+
+    // Update Student
+    public static void updateStudent() {
+
+        System.out.println("\n--- Update Student ---");
+
+        int id = readInt("Enter Student ID: ");
+
+        Student student = findStudent(id);
+
+        if (student == null) {
+            System.out.println("Student not found!");
+            return;
+        }
+
+        System.out.println("Enter new information:");
+
+        String name = readText("New name: ");
+        String father = readText("New father name: ");
+        String department = readText("New department: ");
+
+        int semester = readInt("New semester (1-12): ");
+
+        while (semester < 1 || semester > 12) {
+            System.out.println("Invalid semester!");
+            semester = readInt("New semester: ");
+        }
+
+        String phone = readText("New phone: ");
+
+        double gpa = readDouble("New GPA (0-4): ");
+
+        while (gpa < 0 || gpa > 4) {
+            System.out.println("Invalid GPA!");
+            gpa = readDouble("New GPA: ");
+        }
+
+        student.updateDetails(
+                name, father, department,
+                semester, phone, gpa
+        );
+
+        saveStudents();
+
+        System.out.println("Student updated successfully!");
+    }
+
+    // Delete Student
+    public static void deleteStudent() {
+
+        System.out.println("\n--- Delete Student ---");
+
+        int id = readInt("Enter Student ID: ");
+
+        Student student = findStudent(id);
+
+        if (student == null) {
+            System.out.println("Student not found!");
+            return;
+        }
+
+        student.display();
+
+        System.out.print("Are you sure? (yes/no): ");
+        String answer = input.nextLine().trim();
+
+        if (answer.equalsIgnoreCase("yes")) {
+
+            students.remove(student);
+
+            saveStudents();
+
+            System.out.println("Student deleted successfully!");
+
+        } else {
+            System.out.println("Delete cancelled.");
+        }
+    }
+
+    // Find Student By ID
+    public static Student findStudent(int id) {
+
+        for (Student student : students) {
+
+            if (student.getId() == id) {
+                return student;
+            }
+        }
+
+        return null;
+    }
+
+    // Student Statistics
+    public static void showStatistics() {
+
+        System.out.println("\n--- Student Statistics ---");
+
+        if (students.isEmpty()) {
+            System.out.println("No data available!");
+            return;
+        }
+
+        double totalGpa = 0;
+        double highestGpa = students.get(0).getGpa();
+        double lowestGpa = students.get(0).getGpa();
+
+        for (Student student : students) {
+
+            double gpa = student.getGpa();
+
+            totalGpa += gpa;
+
+            if (gpa > highestGpa) {
+                highestGpa = gpa;
+            }
+
+            if (gpa < lowestGpa) {
+                lowestGpa = gpa;
+            }
+        }
+
+        double averageGpa = totalGpa / students.size();
+
+        System.out.println("Total Students: " + students.size());
+        System.out.println("Average GPA: " + averageGpa);
+        System.out.println("Highest GPA: " + highestGpa);
+        System.out.println("Lowest GPA: " + lowestGpa);
+    }
+
+    // Save Data To File
+    public static void saveStudents() {
+
+        try (DataOutputStream output =
+                     new DataOutputStream(
+                             new FileOutputStream(FILE_NAME))) {
+
+            output.writeInt(students.size());
+
+            for (Student student : students) {
+
+                output.writeInt(student.getId());
+                output.writeUTF(student.getName());
+                output.writeUTF(student.getFatherName());
+                output.writeUTF(student.getDepartment());
+                output.writeInt(student.getSemester());
+                output.writeUTF(student.getPhone());
+                output.writeDouble(student.getGpa());
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error saving data: " + e.getMessage());
+        }
+    }
+
+    // Load Data From File
+    public static void loadStudents() {
+
+        try (DataInputStream data =
+                     new DataInputStream(
+                             new FileInputStream(FILE_NAME))) {
+
+            int count = data.readInt();
+
+            for (int i = 0; i < count; i++) {
+
+                int id = data.readInt();
+                String name = data.readUTF();
+                String father = data.readUTF();
+                String department = data.readUTF();
+                int semester = data.readInt();
+                String phone = data.readUTF();
+                double gpa = data.readDouble();
+
+                Student student = new Student(
+                        id, name, father, department,
+                        semester, phone, gpa
+                );
+
+                students.add(student);
+
+                if (id >= nextId) {
+                    nextId = id + 1;
+                }
+            }
+
+            System.out.println("Student data loaded successfully!");
+
+        } catch (EOFException e) {
+            System.out.println("Student data file is empty or incomplete.");
+
+        } catch (IOException e) {
+            if (students.isEmpty()) {
+                System.out.println("No previous data found. Starting new system.");
+            } else {
+                System.out.println("Error loading data: " + e.getMessage());
+            }
+        }
+    }
+
+    // Read Integer Safely
+    public static int readInt(String message) {
+
+        while (true) {
+
+            try {
+                System.out.print(message);
+
+                int value = Integer.parseInt(input.nextLine().trim());
+
+                return value;
+
+            } catch (NumberFormatException e) {
+
+                System.out.println("Please enter a valid whole number!");
+            }
+        }
+    }
+
+    // Read Double Safely
+    public static double readDouble(String message) {
+
+        while (true) {
+
+            try {
+                System.out.print(message);
+
+                double value = Double.parseDouble(input.nextLine().trim());
+
+                if (Double.isNaN(value) || Double.isInfinite(value)) {
+                    System.out.println("Enter a finite number!");
+                    continue;
+                }
+
+                return value;
+
+            } catch (NumberFormatException e) {
+
+                System.out.println("Please enter a valid number!");
+            }
+        }
+    }
+
+    // Read Non-Empty Text
+    public static String readText(String message) {
+
+        while (true) {
+
+            System.out.print(message);
+
+            String value = input.nextLine().trim();
+
+            if (!value.isEmpty()) {
+                return value;
+            }
+
+            System.out.println("This field cannot be empty!");
+        }
+    }
+}
